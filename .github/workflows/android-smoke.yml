@@ -1,0 +1,61 @@
+name: Android Smoke Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Fetch matching Arc
+        run: |
+          git init ../Arc
+          cd ../Arc
+          git remote add origin https://github.com/Anuken/Arc.git
+          git fetch --depth=1 origin 8eb00ffff0126d0576c67df46f99b8f6bccd96fe
+          git checkout --detach 8eb00ffff0126d0576c67df46f99b8f6bccd96fe
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Disable R8 for debug build
+        run: |
+          sed -i 's/minifyEnabled = true/minifyEnabled = false/' android/build.gradle
+          sed -i 's/shrinkResources = true/shrinkResources = false/' android/build.gradle
+
+      - name: Build APK
+        run: ./gradlew android:assembleDebug --stacktrace
+
+      - name: Run Android 12 smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 31
+          target: default
+          arch: x86_64
+          profile: Pixel_5
+          force-avd-creation: true
+          emulator-options: -no-window -no-audio -no-boot-anim
+          disable-animations: true
+          script: |
+            adb install -r android/build/outputs/apk/debug/android-debug.apk
+            adb logcat -c
+            adb shell am start -W -n io.anuke.mindustry/mindustry.android.AndroidLauncher
+            sleep 20
+            echo "=== PROCESS ==="
+            adb shell pidof io.anuke.mindustry || true
+            echo "=== LOGCAT ==="
+            adb logcat -d -t 1000 | grep -E "AndroidRuntime|FATAL EXCEPTION|libc|DEBUG|mindustry|arc|crash" || true
