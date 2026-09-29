@@ -1,16 +1,18 @@
 IRON FRONT — MODIFICATION NOTICE
 
 IRON FRONT is a modified version of Mindustry.
+Modification date: 2026-09-29.
 
 Base version:
 Mindustry v8 Build 160.5
 Source commit: 067c720a8817c1c9fb586c03898a7d948caaed56
 
-Android branding/package modifications:
+Project modifications:
 - Application name: IRON FRONT
 - Android application ID: io.anuke.ironfront
-- Android build and distribution configuration adapted for this project
+- Android build/distribution workflow adapted for this project
+- Android launcher icon adapted for IRON FRONT
 
-The original project's source, copyright notices, and GNU General Public License v3.0 remain applicable.
+The original project's source, copyright notices, assets, and GNU General Public License v3.0 remain applicable.
 
 This project does not claim ownership of the upstream Mindustry source code or assets.
