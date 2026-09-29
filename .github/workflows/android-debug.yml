@@ -27,15 +27,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build Android debug APK
+      - name: Disable R8 for debug build
         run: |
-          cat > /tmp/iron-front-debug.init.gradle <<'EOF'
-          gradle.projectsEvaluated {
-              project(":android").android.buildTypes.debug.minifyEnabled = false
-              project(":android").android.buildTypes.debug.shrinkResources = false
-          }
-          EOF
-          ./gradlew android:assembleDebug --stacktrace --init-script /tmp/iron-front-debug.init.gradle
+          sed -i 's/minifyEnabled = true/minifyEnabled = false/' android/build.gradle
+          sed -i 's/shrinkResources = true/shrinkResources = false/' android/build.gradle
+
+      - name: Build Android debug APK
+        run: ./gradlew android:assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
