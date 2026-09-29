@@ -21,8 +21,13 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Fetch Arc
-        run: git clone --depth=1 --branch=master https://github.com/Anuken/Arc ../Arc
+      - name: Fetch matching Arc
+        run: |
+          git init ../Arc
+          cd ../Arc
+          git remote add origin https://github.com/Anuken/Arc.git
+          git fetch --depth=1 origin 7445105cd2683daf5b9ac7033ebb07265d3e814d
+          git checkout --detach 7445105cd2683daf5b9ac7033ebb07265d3e814d
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
