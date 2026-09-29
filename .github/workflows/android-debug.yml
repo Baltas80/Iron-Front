@@ -1,4 +1,4 @@
-name: Android Debug APK
+name: Android Test APK
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  build-android-debug:
+  build-android:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,7 +21,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Fetch matching Arc
+      - name: Fetch exact Arc revision
         run: |
           git init ../Arc
           cd ../Arc
@@ -32,17 +32,25 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Disable R8 for debug build
+      - name: Make release installable for CI
         run: |
-          sed -i 's/minifyEnabled = true/minifyEnabled = false/' android/build.gradle
-          sed -i 's/shrinkResources = true/shrinkResources = false/' android/build.gradle
+          sed -i 's/signingConfig = signingConfigs.release/signingConfig = signingConfigs.debug/' android/build.gradle
 
-      - name: Build Android debug APK
-        run: ./gradlew android:assembleDebug --stacktrace
+      - name: Generate packed assets
+        run: ./gradlew pack --stacktrace
+
+      - name: Build Android release APK
+        run: ./gradlew android:assembleRelease -Pbuildversion=160.5 -PversionType=official -PshowCommitHash --stacktrace
+
+      - name: Verify APK
+        run: |
+          test -s android/build/outputs/apk/release/android-release.apk
+          ls -lh android/build/outputs/apk/release/android-release.apk
+          sha256sum android/build/outputs/apk/release/android-release.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: iron-front-android-debug
-          path: android/build/outputs/apk/debug/*.apk
+          name: iron-front-android-release-test
+          path: android/build/outputs/apk/release/android-release.apk
           if-no-files-found: error
